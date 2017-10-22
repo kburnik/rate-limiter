@@ -253,3 +253,28 @@ class RateLimiter(object):
         Number of tokens remaining in the bucket.
     """
     return self._buckets.get(key).get()
+
+  def wrap(self, method):
+    """
+    Creates a rate-limited method of the provided callable.
+
+    When the rate limit is exceeded, an exception is thrown.
+
+    Parameters
+    ----------
+    method : callable
+        The method to execute
+
+    Returns
+    -------
+    callable
+        Method of the same interface with rate-limiting applied.
+    """
+    def execute(*args, **kwargs):
+      if self.reduce():
+        return method(*args, **kwargs)
+      else:
+        raise Exception(
+            "Exhausted quota: " + ", ".join(list(self.exhausted())))
+    return execute
+

@@ -29,3 +29,19 @@ print limiter.status()
 if limiter.get("per_minute") < 3:
   print "You are awfully close to exhausting your minute limits."
 ```
+
+There is also a cleaner way to utilize the rate limiter, by simply wrapping
+the implementation:
+
+```python
+class Client(object):
+  def __init__(self, limiter):
+    self.send = limiter.wrap(self._send_impl)
+
+  def _send_impl(self, req):
+    print "Sending request (%s)" % json.dumps(req)
+
+
+# This is now a rate-limited call which throws when exceeding the limit.
+client.send("foo")
+```
