@@ -45,3 +45,13 @@ class Client(object):
 # This is now a rate-limited call which throws when exceeding the limit.
 client.send("foo")
 ```
+
+Also try the example use cases:
+
+```bash
+# A mock client with rate limiting.
+python -u client.py
+
+# The same client with retry attempts which eventually fail.
+python -u retry_proxy.py
+```
