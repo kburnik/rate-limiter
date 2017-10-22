@@ -1,6 +1,5 @@
 from client import Client
 from rate_limit import Bucket, Period as Per, RateLimiter
-from testing import SkewedClock
 import random
 import time
 
@@ -39,13 +38,13 @@ class RetryProxy(object):
           # Execute client method (proxy the call).
           return getattr(client, method)(obj, *args, **kwargs)
         except Exception, ex:
-          print "Failure occurred while calling ", method
+          print "Failure occurred while calling", method
           if attempts == 0:
             print "Retry attempts exhausted"
             raise ex
           # Sleep with exponential backoff and random offset.
-          clock.sleep(interval)
           attempts -= 1
+          clock.sleep(interval)
           random_value = random.uniform(0, policy.randomness)
           interval = interval * policy.multiplier + random_value
 
@@ -53,14 +52,12 @@ class RetryProxy(object):
 
 
 if __name__ == "__main__":
-  clock = SkewedClock(factor=10.0)
-  rate_of = Bucket.builder(clock=clock)
+  rate_of = Bucket.builder()
   limiter = RateLimiter(per_second=rate_of(3, Per.SECOND),
                         per_minute=rate_of(10, Per.MINUTE))
-
-  policy = RetryPolicy(attempts=3, interval=1, multiplier=2.0, randomness=0.3)
   client = Client(limiter)
-  proxy = RetryProxy(client, policy, clock=clock)
+  policy = RetryPolicy(attempts=4, interval=1, multiplier=1.5, randomness=2.0)
+  proxy = RetryProxy(client, policy)
 
   for i in range(100):
     proxy.send(i)
